@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+
+# Model artifacts
+models/*.pth
+
+# Runtime generated files
+static/uploads/*
+!static/uploads/.gitkeep
+static/outputs/*
+!static/outputs/.gitkeep
+
+# OS / Editor artifacts
+.DS_Store
+*.swp
+*.swo
+
+# Windows alternate data streams
+*:Zone.Identifier
+
+# Codex metadata
+.codex

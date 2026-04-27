@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>カーブミラー俯瞰画像生成</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h1>カーブミラー俯瞰画像生成 Webアプリ</h1>
+    <p class="lead">
+        カーブミラー画像から道路領域を抽出し、4点推定と射影変換で俯瞰画像を生成します。
+    </p>
+
+    <div class="card">
+        <form action="{{ url_for('process') }}" method="post" enctype="multipart/form-data">
+            <label>画像ファイル</label>
+            <input type="file" name="image" accept="image/*" required>
+
+            <label>4点推定モード</label>
+            <select name="method_mode">
+                <option value="compare">2手法を比較表示（推奨）</option>
+                <option value="ransac">提案手法のみ：幅フィルタ + RANSAC</option>
+                <option value="contour">比較手法のみ：最大輪郭四角形近似</option>
+            </select>
+
+            <button type="submit">処理開始</button>
+        </form>
+    </div>
+
+    <div class="note">
+        <h2>道路マスク推論設定</h2>
+        <p>{{ model_notice }}</p>
+        <p>
+            学習済みモデルを使う場合は
+            <code>models/best_model.pth</code> を配置してください。
+        </p>
+    </div>
+
+    {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+    {% endif %}
+</div>
+</body>
+</html>

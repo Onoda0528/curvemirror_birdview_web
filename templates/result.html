@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>処理結果</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h1>処理結果</h1>
+    <p class="lead">
+        道路マスク推論: <strong>{{ segmentation_backend }}</strong><br>
+        <span class="subtle">{{ segmentation_detail }}</span>
+    </p>
+
+    <div class="grid top-grid">
+        <div class="result-card">
+            <h2>入力画像</h2>
+            <img src="{{ url_for('static', filename=input_image) }}">
+        </div>
+
+        <div class="result-card">
+            <h2>道路マスク</h2>
+            <img src="{{ url_for('static', filename=mask_image) }}">
+        </div>
+    </div>
+
+    <h2 class="section-title">4点推定手法の比較</h2>
+    <div class="method-grid">
+        {% for result in method_results %}
+        <div class="result-card">
+            <h3>{{ result.name }}</h3>
+
+            {% if result.success %}
+            <p class="ok">推定成功</p>
+
+            <h4>4点推定結果</h4>
+            <img src="{{ url_for('static', filename=result.quad_image) }}">
+
+            <h4>俯瞰画像</h4>
+            <img src="{{ url_for('static', filename=result.birdview_image) }}">
+            {% else %}
+            <p class="error-text">推定失敗: {{ result.error_message }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <a href="{{ url_for('index') }}" class="back">戻る</a>
+</div>
+</body>
+</html>

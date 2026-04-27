@@ -1,0 +1,125 @@
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f4f6f8;
+    color: #222;
+}
+
+.container {
+    width: min(1100px, 92%);
+    margin: 40px auto;
+}
+
+.lead {
+    color: #555;
+    line-height: 1.7;
+}
+
+.subtle {
+    color: #667085;
+    font-size: 0.92rem;
+}
+
+.card, .note, .error, .result-card {
+    background: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    margin-top: 24px;
+}
+
+label {
+    display: block;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccd3db;
+    border-radius: 10px;
+}
+
+button {
+    margin-top: 24px;
+    padding: 14px 24px;
+    border: 0;
+    border-radius: 10px;
+    background: #222;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.top-grid {
+    margin-top: 10px;
+}
+
+.method-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.section-title {
+    margin-top: 28px;
+}
+
+.result-card img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.result-card h3 {
+    margin-top: 0;
+}
+
+.result-card h4 {
+    margin-bottom: 8px;
+}
+
+.error {
+    border-left: 6px solid #d33;
+    color: #a00;
+}
+
+.ok {
+    color: #0f7a33;
+    font-weight: 700;
+}
+
+.error-text {
+    color: #a00;
+    line-height: 1.6;
+}
+
+.back {
+    display: inline-block;
+    margin-top: 24px;
+    color: #222;
+    font-weight: 700;
+}
+
+code {
+    background: #eef1f4;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+@media (max-width: 760px) {
+    .grid,
+    .method-grid {
+        grid-template-columns: 1fr;
+    }
+}
