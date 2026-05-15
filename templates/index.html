@@ -9,23 +9,222 @@
 <div class="container">
     <h1>カーブミラー俯瞰画像生成 Webアプリ</h1>
     <p class="lead">
-        カーブミラー画像から道路領域を抽出し、4点推定と射影変換で俯瞰画像を生成します。
+        カーブミラー画像から道路領域抽出・4点推定・俯瞰変換を実行し、必要に応じて学習と歪み補正も行えます。
     </p>
 
     <div class="card">
+        <h2>1. 推論（道路抽出 + 俯瞰変換）</h2>
         <form action="{{ url_for('process') }}" method="post" enctype="multipart/form-data">
             <label>画像ファイル</label>
             <input type="file" name="image" accept="image/*" required>
 
-            <label>4点推定モード</label>
+            <label>道路マスク推論モデル</label>
+            <select name="model_choice">
+                {% for option in model_options %}
+                <option value="{{ option.value }}" {% if option.value == selected_model %}selected{% endif %}>
+                    {{ option.label }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <label>4点推定手法</label>
             <select name="method_mode">
-                <option value="compare">2手法を比較表示（推奨）</option>
-                <option value="ransac">提案手法のみ：幅フィルタ + RANSAC</option>
-                <option value="contour">比較手法のみ：最大輪郭四角形近似</option>
+                <option value="ransac" {% if selected_method_mode == "ransac" %}selected{% endif %}>
+                    提案手法：幅フィルタ + RANSAC
+                </option>
+                <option value="learned" {% if selected_method_mode == "learned" %}selected{% endif %}>
+                    学習4点回帰モデル（models/quadpoint_best.pth）
+                </option>
+                <option value="compare_rl" {% if selected_method_mode == "compare_rl" %}selected{% endif %}>
+                    RANSAC と学習4点モデルを比較
+                </option>
+            </select>
+
+            <label>出力モード</label>
+            <select name="output_mode">
+                <option value="full">俯瞰変換まで表示</option>
+                <option value="segmentation">セグメンテーション結果のみ表示</option>
             </select>
 
             <button type="submit">処理開始</button>
         </form>
+    </div>
+
+    <div class="card">
+        <h2>2. セグメンテーション学習</h2>
+        {% if train_script_ready %}
+        <form action="{{ url_for('training_start') }}" method="post" enctype="multipart/form-data">
+            <label>データセット指定方法</label>
+            <select name="train_dataset_mode">
+                <option value="path" {% if train_dataset_mode == "path" %}selected{% endif %}>ディレクトリ指定</option>
+                <option value="zip" {% if train_dataset_mode == "zip" %}selected{% endif %}>zipアップロード</option>
+            </select>
+
+            <label>学習画像ディレクトリ</label>
+            <input type="text" name="train_images_dir" value="{{ train_images_dir }}">
+
+            <label>学習マスクディレクトリ</label>
+            <input type="text" name="train_masks_dir" value="{{ train_masks_dir }}">
+
+            <label>学習画像 zip（zipモード時）</label>
+            <input type="file" name="train_images_zip" accept=".zip,application/zip">
+
+            <label>学習マスク zip（zipモード時）</label>
+            <input type="file" name="train_masks_zip" accept=".zip,application/zip">
+            <p class="subtle">
+                画像とマスクは同名、またはマスクが <code>*_mask</code> 命名で対応付けます。
+            </p>
+
+            <label>チェックポイント保存先</label>
+            <input type="text" name="train_checkpoint_dir" value="{{ train_checkpoint_dir }}" required>
+
+            <label>Epochs</label>
+            <input type="number" name="train_epochs" value="{{ train_epochs }}" min="1" max="10000" required>
+
+            <label>Batch Size</label>
+            <input type="number" name="train_batch_size" value="{{ train_batch_size }}" min="1" max="256" required>
+
+            <label>Learning Rate</label>
+            <input type="number" step="0.000001" name="train_lr" value="{{ train_lr }}" min="0.0000001" max="1" required>
+
+            <label>Num Workers</label>
+            <input type="number" name="train_num_workers" value="{{ train_num_workers }}" min="0" max="32" required>
+
+            <button type="submit">学習開始</button>
+        </form>
+
+        <form action="{{ url_for('training_stop') }}" method="post">
+            <button type="submit" class="danger">学習停止</button>
+        </form>
+
+        <div class="subcard">
+            <h3>学習ステータス</h3>
+            <p>{{ training_status.message }}</p>
+            {% if training_status.pid %}
+            <p>PID: {{ training_status.pid }}</p>
+            {% endif %}
+            {% if training_status.started_at %}
+            <p>開始時刻: {{ training_status.started_at }}</p>
+            {% endif %}
+            {% if training_status.command %}
+            <p>コマンド: <code>{{ training_status.command }}</code></p>
+            {% endif %}
+            {% if training_status.log_tail %}
+            <pre class="log-box">{{ training_status.log_tail }}</pre>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="error-text">学習スクリプトが見つかりませんでした。</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>3. 4点推定学習</h2>
+        {% if quad_train_script_ready %}
+        <form action="{{ url_for('quad_training_start') }}" method="post" enctype="multipart/form-data">
+            <label>データセット指定方法</label>
+            <select name="quad_train_dataset_mode">
+                <option value="path" {% if quad_train_dataset_mode == "path" %}selected{% endif %}>ディレクトリ指定</option>
+                <option value="zip" {% if quad_train_dataset_mode == "zip" %}selected{% endif %}>zipアップロード</option>
+            </select>
+
+            <label>4点学習入力</label>
+            <select name="quad_train_input_mode">
+                <option value="rgb" {% if quad_train_input_mode == "rgb" %}selected{% endif %}>RGBのみ</option>
+                <option value="rgb_mask" {% if quad_train_input_mode == "rgb_mask" %}selected{% endif %}>RGB + 道路マスク</option>
+            </select>
+
+            <label>学習画像ディレクトリ</label>
+            <input type="text" name="quad_train_images_dir" value="{{ quad_train_images_dir }}">
+
+            <label>学習マスクディレクトリ（RGB+Mask時）</label>
+            <input type="text" name="quad_train_masks_dir" value="{{ quad_train_masks_dir }}">
+
+            <label>4点ラベルCSV</label>
+            <input type="text" name="quad_train_labels_csv" value="{{ quad_train_labels_csv }}">
+
+            <label>学習画像 zip（zipモード時）</label>
+            <input type="file" name="quad_train_images_zip" accept=".zip,application/zip">
+
+            <label>学習マスク zip（RGB+Maskのzipモード時）</label>
+            <input type="file" name="quad_train_masks_zip" accept=".zip,application/zip">
+
+            <label>4点ラベル csv（zipモード時）</label>
+            <input type="file" name="quad_train_labels_csv_file" accept=".csv,text/csv">
+            <p class="subtle">
+                CSV列: <code>filename,lt_x,lt_y,rt_x,rt_y,rb_x,rb_y,lb_x,lb_y</code><br>
+                座標はピクセル値または 0..1 正規化のどちらでも指定できます。<br>
+                マスクは画像と同名、または <code>*_mask</code> 命名で対応付けます。
+            </p>
+
+            <label>チェックポイント保存先</label>
+            <input type="text" name="quad_train_checkpoint_dir" value="{{ quad_train_checkpoint_dir }}" required>
+
+            <label>Epochs</label>
+            <input type="number" name="quad_train_epochs" value="{{ quad_train_epochs }}" min="1" max="10000" required>
+
+            <label>Batch Size</label>
+            <input type="number" name="quad_train_batch_size" value="{{ quad_train_batch_size }}" min="1" max="256" required>
+
+            <label>Learning Rate</label>
+            <input type="number" step="0.000001" name="quad_train_lr" value="{{ quad_train_lr }}" min="0.0000001" max="1" required>
+
+            <label>Num Workers</label>
+            <input type="number" name="quad_train_num_workers" value="{{ quad_train_num_workers }}" min="0" max="32" required>
+
+            <label>Input Size</label>
+            <input type="number" name="quad_train_input_size" value="{{ quad_train_input_size }}" min="96" max="2048" required>
+
+            <button type="submit">4点学習開始</button>
+        </form>
+
+        <form action="{{ url_for('quad_training_stop') }}" method="post">
+            <button type="submit" class="danger">4点学習停止</button>
+        </form>
+
+        <div class="subcard">
+            <h3>4点学習ステータス</h3>
+            <p>{{ quad_training_status.message }}</p>
+            {% if quad_training_status.pid %}
+            <p>PID: {{ quad_training_status.pid }}</p>
+            {% endif %}
+            {% if quad_training_status.started_at %}
+            <p>開始時刻: {{ quad_training_status.started_at }}</p>
+            {% endif %}
+            {% if quad_training_status.command %}
+            <p>コマンド: <code>{{ quad_training_status.command }}</code></p>
+            {% endif %}
+            {% if quad_training_status.log_tail %}
+            <pre class="log-box">{{ quad_training_status.log_tail }}</pre>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="error-text">4点学習スクリプトが見つかりませんでした。</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>4. カーブミラー歪み補正</h2>
+        {% if distortion_script_ready %}
+        <form action="{{ url_for('distortion_process') }}" method="post" enctype="multipart/form-data">
+            <label>補正対象画像</label>
+            <input type="file" name="distortion_image" accept="image/*" required>
+
+            <label>処理時リサイズ幅</label>
+            <input
+                type="number"
+                name="distortion_target_width"
+                value="{{ distortion_target_width }}"
+                min="100"
+                max="3000"
+                required
+            >
+
+            <button type="submit">歪み補正を実行</button>
+        </form>
+        {% else %}
+        <p class="error-text">歪み補正スクリプトが見つかりませんでした。</p>
+        {% endif %}
     </div>
 
     <div class="note">
@@ -33,9 +232,14 @@
         <p>{{ model_notice }}</p>
         <p>
             学習済みモデルを使う場合は
-            <code>models/best_model.pth</code> を配置してください。
+            <code>models/*.pth</code> または
+            <code>models/*.xml + models/*.bin</code> を配置してください。
         </p>
     </div>
+
+    {% if info_message %}
+    <div class="info">{{ info_message }}</div>
+    {% endif %}
 
     {% if error_message %}
     <div class="error">{{ error_message }}</div>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>歪み補正結果</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h1>歪み補正結果</h1>
+    <p class="lead">処理時リサイズ幅: <strong>{{ target_width }}</strong></p>
+
+    <div class="grid top-grid">
+        <div class="result-card">
+            <h2>入力画像</h2>
+            <img src="{{ url_for('static', filename=input_image) }}">
+        </div>
+
+        {% if mirror_image %}
+        <div class="result-card">
+            <h2>ミラー切り出し画像</h2>
+            <img src="{{ url_for('static', filename=mirror_image) }}">
+        </div>
+        {% endif %}
+    </div>
+
+    {% if corrected_image %}
+    <div class="result-card">
+        <h2>歪み補正画像</h2>
+        <img src="{{ url_for('static', filename=corrected_image) }}">
+    </div>
+    {% endif %}
+
+    {% if distortion_log %}
+    <div class="result-card">
+        <h2>実行ログ（末尾）</h2>
+        <pre class="log-box">{{ distortion_log }}</pre>
+    </div>
+    {% endif %}
+
+    <a href="{{ url_for('index') }}" class="back">戻る</a>
+</div>
+</body>
+</html>

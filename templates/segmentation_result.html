@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>処理結果</title>
+    <title>セグメンテーション結果</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <div class="container">
-    <h1>処理結果</h1>
+    <h1>セグメンテーション結果</h1>
     <p class="lead">
         モデル設定: <strong>{{ selected_model_label }}</strong><br>
         道路マスク推論: <strong>{{ segmentation_backend }}</strong><br>
@@ -30,27 +30,18 @@
             <img src="{{ url_for('static', filename=clean_mask_image) }}">
         </div>
     </div>
-    <p class="subtle">※ 4点推定と俯瞰変換は「後処理後マスク」を使用します。</p>
+    <p class="subtle">※ 上段はモデル生出力と、俯瞰生成用の後処理マスクを並べて表示しています。</p>
 
-    <h2 class="section-title">{{ method_title }}</h2>
-    <div class="method-grid">
-        {% for result in method_results %}
+    <div class="grid top-grid">
         <div class="result-card">
-            <h3>{{ result.name }}</h3>
-
-            {% if result.success %}
-            <p class="ok">推定成功</p>
-
-            <h4>4点推定結果</h4>
-            <img src="{{ url_for('static', filename=result.quad_image) }}">
-
-            <h4>俯瞰画像</h4>
-            <img src="{{ url_for('static', filename=result.birdview_image) }}">
-            {% else %}
-            <p class="error-text">推定失敗: {{ result.error_message }}</p>
-            {% endif %}
+            <h2>重畳（生出力）</h2>
+            <img src="{{ url_for('static', filename=raw_overlay_image) }}">
         </div>
-        {% endfor %}
+
+        <div class="result-card">
+            <h2>重畳（後処理後）</h2>
+            <img src="{{ url_for('static', filename=clean_overlay_image) }}">
+        </div>
     </div>
 
     <a href="{{ url_for('index') }}" class="back">戻る</a>

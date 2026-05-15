@@ -28,6 +28,15 @@ body {
     margin-top: 24px;
 }
 
+.info {
+    background: #f0f9ff;
+    border-left: 6px solid #0284c7;
+    color: #0c4a6e;
+    padding: 16px 20px;
+    border-radius: 16px;
+    margin-top: 24px;
+}
+
 label {
     display: block;
     margin-top: 18px;
@@ -51,6 +60,11 @@ button {
     color: #fff;
     font-weight: 700;
     cursor: pointer;
+}
+
+.danger {
+    margin-top: 12px;
+    background: #7f1d1d;
 }
 
 .grid {
@@ -89,6 +103,14 @@ button {
     margin-bottom: 8px;
 }
 
+.subcard {
+    margin-top: 24px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
 .error {
     border-left: 6px solid #d33;
     color: #a00;
@@ -102,6 +124,17 @@ button {
 .error-text {
     color: #a00;
     line-height: 1.6;
+}
+
+.log-box {
+    margin-top: 10px;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 14px;
+    border-radius: 10px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    line-height: 1.4;
 }
 
 .back {
